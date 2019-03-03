@@ -1,2 +1,49 @@
 ---
 # tasks file for logrotate-wizard
+
+- name: Install GPG Keys
+  shell: 'gpg --keyserver keyserver.ubuntu.com --recv-key 992A96E075056E79CD8214F9873DB37572A37B36'
+
+- name: Install required packages
+  apt: name={{ item }} state=present
+  with_items:
+    - git
+    - autoconf
+    - automake
+    - libpopt-dev
+    - libtool
+    - make
+    - xz-utils
+
+- name: Create directory structure in /usr/local/sbin
+  file:
+    path: /usr/local/sbin/{{ item }}
+    state:  directory
+    owner:  root
+    group:  root
+  with_items:
+    - logrotate_git_repositories
+    - logrotate_builds
+
+- name: Git clone logrotate
+  git:
+    repo: 'https://github.com/logrotate/logrotate.git'
+    dest: "/usr/local/sbin/logrotate_git_repositories/logrotate-{{ logrotate_version }}"
+    version: "{{ logrotate_version }}"
+    verify_commit: yes
+
+- name: Compile logrotate
+  shell: 'cd "/usr/local/sbin/logrotate_git_repositories/logrotate-{{ logrotate_version }}" && autoreconf -fiv && ./configure && make'
+  args:
+    creates: "/usr/local/sbin/logrotate_git_repositories/logrotate-{{ logrotate_version }}/logrotate"
+
+- name: Copy logrotate executable into builds directory
+  shell: 'cp /usr/local/sbin/logrotate_git_repositories/logrotate-{{ logrotate_version }}/logrotate /usr/local/sbin/logrotate_builds/logrotate-{{ logrotate_version }}'
+  args:
+    creates: "/usr/local/sbin/logrotate_builds/logrotate-{{ logrotate_version }}"
+
+- name: Link logrotate executable
+  file:
+    state: link
+    path: /usr/local/sbin/logrotate
+    src: "/usr/local/sbin/logrotate_builds/logrotate-{{ logrotate_version }}"
