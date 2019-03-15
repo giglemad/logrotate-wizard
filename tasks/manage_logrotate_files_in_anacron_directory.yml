@@ -26,6 +26,6 @@
 - name: Replace occurences of packaged logrotate into
   replace:
     path: "{{ anacron_directory }}/logrotate_managed_by_wizard"
-    regexp:  '[^\s]+logrotate\s'
+    regexp:  '/usr/sbin/logrotate'
     replace: '/usr/local/sbin/logrotate '
   when: managed_by_pkg_manager
