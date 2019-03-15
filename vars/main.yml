@@ -1,2 +1,3 @@
 ---
 # vars file for logrotate-wizard
+manage_cron: false

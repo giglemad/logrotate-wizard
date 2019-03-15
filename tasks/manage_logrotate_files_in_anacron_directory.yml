@@ -1,0 +1,31 @@
+- name: Check if anacron_directory has logrotate file managed by pkg manager
+  shell: "[ -f {{ anacron_directory }}/logrotate ]"
+  register: managed_by_pkg_manager_test_command
+  ignore_errors: true
+  no_log: true
+
+- set_fact:
+    managed_by_pkg_manager: "{{ managed_by_pkg_manager_test_command.rc == 0 }}"
+
+- name: Duplicate logrotate file managed by pkg manager
+  copy:
+    src:  "{{ anacron_directory }}/logrotate"
+    dest: "{{ anacron_directory }}/logrotate_managed_by_wizard"
+    mode: preserve
+    remote_src: true
+  when: managed_by_pkg_manager
+
+- name: Comment logrotate file managed by pkg manager
+  shell: "sed -i 's/^/#/g' {{ anacron_directory }}/logrotate"
+  when: managed_by_pkg_manager
+
+- name: Rename logrotate file managed by pkg manager for clarity
+  shell: "mv {{ anacron_directory }}/logrotate {{ anacron_directory }}/logrotate_managed_by_pkg_manager"
+  when: managed_by_pkg_manager
+
+- name: Replace occurences of packaged logrotate into
+  replace:
+    path: "{{ anacron_directory }}/logrotate_managed_by_wizard"
+    regexp:  '[^\s]+logrotate\s'
+    replace: '/usr/local/sbin/logrotate '
+  when: managed_by_pkg_manager
