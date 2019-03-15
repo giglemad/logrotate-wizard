@@ -47,3 +47,9 @@
     state: link
     path: /usr/local/sbin/logrotate
     src: "/usr/local/sbin/logrotate_builds/logrotate-{{ logrotate_version }}"
+
+- name: Manage logrotate files in anacron directories
+  include: manage_logrotate_files_in_anacron_directories.yml
+  when: manage_cron
+  tags: cron
+
